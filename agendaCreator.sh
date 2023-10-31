@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-templatePath='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2023_SPRING/TEMPLATE.docx'
-agendaFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2023_SPRING'
-minutesFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/MEETING MINUTES/2023_SPRING'
+templatePath='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2023_FALL/TEMPLATE.docx'
+agendaFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2023_FALL'
+minutesFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/MEETING MINUTES/2023_FALL'
 
 # Grab the password for the bot from the password file (only root has access to it)
 if ! password=$(cat /opt/bots/password); then
