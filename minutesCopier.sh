@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-agendaFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2024_SPRING'
-minutesFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/MEETING MINUTES/2024_SPRING'
+agendaFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2024_FALL'
+minutesFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/MEETING MINUTES/2024_FALL'
 
 # Grab the password for the bot from the password file (only root has access to it)
 if ! password=$(cat /opt/bots/password); then
