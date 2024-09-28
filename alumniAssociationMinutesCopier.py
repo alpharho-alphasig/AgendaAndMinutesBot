@@ -5,18 +5,16 @@ import http.client
 import base64
 import datetime
 import xml.etree.ElementTree as etree
+import json
+
+with open("/opt/bots/config.json", "r") as configFile:
+    config = json.load(configFile)
 
 # Paths
-templatePath = "/Shared/Alumni Association/Association Meetings/2024_TEMPLATE.docx"
-minutesFolder = "/Shared/Alumni Association/Association Meetings/Minutes"
+templatePath = config["aaFolder"] + "/" + str(config["currentSemester"]["year"]) + "_TEMPLATE.docx"
+minutesFolder = config["aaMinutesFolder"]
 
 # Utility functions
-def readFile(path: str, errMsg: str):
-    with open(path, "r") as file:
-        if not file:
-            print(errMsg)
-            exit(0)
-        return file.read().strip()
 
 def substringAfterLast(s: str, delim: str):
     i = s.rfind(delim)
@@ -40,11 +38,11 @@ def getFileListFromResponse(response):
     return [unquote(substringAfterLast(result.text, "/")) for result in results if not result.text.endswith("/")]
 
 # Variables I did not want to put on GitHub
-botPassword = readFile("/opt/bots/password", "This bot only works as root!")
-ncUrl = readFile("/opt/bots/agendaCreator/URLs/nextcloudURL.txt", "Cannot find nextCloudURL.txt. Exiting.")
+botPassword = config["botPassword"]
+ncUrl = config["nextcloudURL"]
 
 # List all the files in the minutes directory
-minutesRequest = http.client.HTTPSConnection(ncUrl[8:-1], "443")
+minutesRequest = http.client.HTTPSConnection(ncUrl[8:-1], 443)
 minutesRequest.request(method="PROPFIND", url=ncUrl + quote("remote.php/dav/files/bot" + minutesFolder), body=
 """<?xml version="1.0" encoding="UTF-8"?>
   <d:propfind xmlns:d="DAV:">
@@ -87,9 +85,9 @@ fileId = substringBetween(str(minutesResponse), "<oc:fileid>", "</oc:fileid>")
 shareLink= ncUrl + "f/" + fileId
 
 # Send a message on discord in officer #announcements.
-discordWebhookUrl = readFile("/opt/bots/agendaCreator/URLs/minutesAADiscordURL.txt", "Could not find discord webhook URL. Exiting.")
+discordWebhookUrl = config["minutesAADiscordURL"]
 print("<@&1130649672525021294> **Here are next month's meeting minutes:** "+ shareLink)
-minutesRequest = http.client.HTTPSConnection("discord.com", "443")
+minutesRequest = http.client.HTTPSConnection("discord.com", 443)
 minutesRequest.request(method="POST", url=discordWebhookUrl, headers={"Content-Type": "application/json"},
                        body="{\"content\": \"<@&1130649672525021294> **Here are next month's meeting minutes:** "+ shareLink +"\"}")
 minutesResponse = minutesRequest.getresponse().close()

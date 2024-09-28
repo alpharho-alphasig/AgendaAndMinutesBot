@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 
-agendaFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2024_FALL'
-minutesFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/MEETING MINUTES/2024_FALL'
-
-# Grab the password for the bot from the password file (only root has access to it)
-if ! password=$(cat /opt/bots/password); then
-    echo 'This bot only works as root!'
-    exit 1
-fi
-
-ncURL=$(cat /opt/bots/agendaCreator/URLs/nextcloudURL.txt)
+currentSemester="$(jq -r '.currentSemester.year' /opt/bots/config.json)_$(jq -r '.currentSemester.season' /opt/bots/config.json)"
+agendaFolder="$(jq -r '.agendaFolder' /opt/bots/config.json)/$currentSemester"
+minutesFolder="$(jq -r '.minutesFolder' /opt/bots/config.json)/$currentSemester"
+password=$(jq -r '.botPassword' /opt/bots/config.json)
+ncURL=$(jq -r '.nextcloudURL' /opt/bots/config.json)
 
 # URL encode the folder paths for NextCloud using python's urllib, since that's already installed.
 function urlencode {
@@ -76,5 +71,5 @@ id=$(echo "$idResponse" | grep -E -o '<oc:fileid>[^<]+' | cut -c 12-)
 shareLink="${ncURL}f/$id"
 
 # Send a message on discord in #chapter-announcements.
-curl "$(cat /opt/bots/agendaCreator/URLs/minutesDiscordURL.txt)" -X POST -H "Content-Type: application/json" \
+curl "$(jq -r '.minutesDiscordURL' /opt/bots/config.json)" -X POST -H "Content-Type: application/json" \
 --data "{\"content\": \"<@&626070887166377984> **Here are this week's meeting minutes:** $shareLink\"}"

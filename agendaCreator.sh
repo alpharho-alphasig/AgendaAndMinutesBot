@@ -1,16 +1,11 @@
 #!/usr/bin/env bash
 
-templatePath='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2024_FALL/TEMPLATE.docx'
-agendaFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/AGENDAS/2024_FALL'
-minutesFolder='/Shared/NewDrive/ALPHA SIG GENERAL/01_CHAPTER MEETINGS/MEETING MINUTES/2024_FALL'
-
-# Grab the password for the bot from the password file (only root has access to it)
-if ! password=$(cat /opt/bots/password); then
-    echo 'This bot only works as root!'
-    exit 1
-fi
-
-ncURL=$(cat /opt/bots/agendaCreator/URLs/nextcloudURL.txt)
+currentSemester="$(jq -r '.currentSemester.year' /opt/bots/config.json)_$(jq -r '.currentSemester.season' /opt/bots/config.json)"
+agendaFolder="$(jq -r '.agendaFolder' /opt/bots/config.json)/$currentSemester"
+minutesFolder="$(jq -r '.minutesFolder' /opt/bots/config.json)/$currentSemester"
+password=$(jq -r '.botPassword' /opt/bots/config.json)
+ncURL=$(jq -r '.nextcloudURL' /opt/bots/config.json)
+templatePath="$agendaFolder/TEMPLATE.docx"
 
 # URL encode the folder paths for NextCloud using python's urllib, since that's already installed.
 function urlencode {
@@ -85,5 +80,5 @@ id=$(echo "$idResponse" | grep -E -o '<oc:fileid>[^<]+' | cut -c 12-)
 shareLink="${ncURL}f/$id"
 
 # Send a reminder in the #directors channel.
-curl "$(cat /opt/bots/agendaCreator/URLs/agendaDiscordURL.txt)" -X POST -H "Content-Type: application/json" \
+curl "$(jq -r '.agendaDiscordURL' /opt/bots/config.json)" -X POST -H "Content-Type: application/json" \
 --data "{\"content\": \"<@&626160984876384287> <@&626158522802896906> **The agenda for Monday's meeting has been generated! Please fill it out now:** $shareLink\"}"
