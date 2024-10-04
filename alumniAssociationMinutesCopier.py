@@ -15,21 +15,20 @@ templatePath = config["aaFolder"] + "/" + str(config["currentSemester"]["year"])
 minutesFolder = config["aaMinutesFolder"]
 
 # Utility functions
-
-def substringAfterLast(s: str, delim: str):
-    i = s.rfind(delim)
-    return s[i+len(delim):] if i != -1 else s
-
 def substringBetween(s: str, start: str, end: str):
     i1 = s.find(start)
     i2 = s.find(end)
     if i1 != i2 != -1:
-        return s[i1+len(start):i2]
+        return s[i1 + len(start):i2]
     elif i1 == i2 == -1:
         return s
     elif i1 == -1:
         return s[:i2]
-    return s[i1+len(start):]
+    return s[i1 + len(start):]
+
+def substringAfterLast(s: str, delim: str):
+    i = s.rfind(delim)
+    return s[i+len(delim):] if i != -1 else s
 
 def getFileListFromResponse(response):
     xml: etree.Element = etree.fromstring(response)
@@ -60,7 +59,7 @@ nextMonth = newestDate + datetime.timedelta(days=31)
 # (I.E: It's February '24 and it wants to make June '24 minutes), then exit
 if nextMonth >= (datetime.datetime.now() + datetime.timedelta(days=31)):
     print("Meeting minutes should already exist?")
-    exit(0)
+    #exit(0)
 
 # Convert the date for next month back into a filename
 newFilename = nextMonth.strftime("%Y %B Minutes.docx")
@@ -82,13 +81,28 @@ minutesRequest.request(method="PROPFIND", url=ncUrl + quote("remote.php/dav/file
    </d:propfind>""", headers={"Authorization": "Basic "+base64.b64encode(b"bot:"+botPassword.encode()).decode()})
 minutesResponse = minutesRequest.getresponse().read()
 fileId = substringBetween(str(minutesResponse), "<oc:fileid>", "</oc:fileid>")
-shareLink= ncUrl + "f/" + fileId
+internalShareURL= ncUrl + "f/" + fileId
+
+# Get the Share ID for the new minutes.
+shareRequest = http.client.HTTPSConnection(config["nextcloudURL"][8:-1], 443)
+url = (config["nextcloudURL"] + f"ocs/v2.php/apps/files_sharing/api/v1/shares?path=" +
+       f"{quote('/Shared/Alumni Association/Association Meetings/Minutes/2024 November Minutes.docx')}&shareType=3&permissions=1")
+shareRequest.request(method="POST", url=url, headers={"OCS-APIRequest": "true", "Authorization": "Basic "+base64.b64encode(b"bot:"+botPassword.encode()).decode()})
+shareResponse = shareRequest.getresponse()
+shareXML = str(shareResponse.read())
+shareResponse.close()
+shareURL = substringBetween(shareXML, "<url>", "</url>")
+
 
 # Send a message on discord in officer #announcements.
 discordWebhookUrl = config["minutesAADiscordURL"]
-print("<@&1130649672525021294> **Here are next month's meeting minutes:** "+ shareLink)
+discordAnnouncementWebhookUrl = config["minutesAAAnnouncementDiscordURL"]
+
+print("<@&1130649672525021294> **Here are next month's meeting minutes:** " + internalShareURL)
 minutesRequest = http.client.HTTPSConnection("discord.com", 443)
 minutesRequest.request(method="POST", url=discordWebhookUrl, headers={"Content-Type": "application/json"},
-                       body="{\"content\": \"<@&1130649672525021294> **Here are next month's meeting minutes:** "+ shareLink +"\"}")
+                       body="{\"content\": \"<@&1130649672525021294> **Here are next week's meeting minutes:** " + internalShareURL + "\"}")
+minutesRequest.request(method="POST", url=discordAnnouncementWebhookUrl, headers={"Content-Type": "application/json"},
+                      body="{\"content\": \"<@&1130649672525021294> **Here are next week's meeting minutes:** "+ shareURL +"\"}")
 minutesResponse = minutesRequest.getresponse().close()
 
