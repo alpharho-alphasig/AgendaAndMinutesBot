@@ -86,7 +86,7 @@ internalShareURL= ncUrl + "f/" + fileId
 # Get the Share ID for the new minutes.
 shareRequest = http.client.HTTPSConnection(config["nextcloudURL"][8:-1], 443)
 url = (config["nextcloudURL"] + f"ocs/v2.php/apps/files_sharing/api/v1/shares?path=" +
-       f"{quote('/Shared/Alumni Association/Association Meetings/Minutes/2024 November Minutes.docx')}&shareType=3&permissions=1")
+       f"{quote(newFilename)}&shareType=3&permissions=1")
 shareRequest.request(method="POST", url=url, headers={"OCS-APIRequest": "true", "Authorization": "Basic "+base64.b64encode(b"bot:"+botPassword.encode()).decode()})
 shareResponse = shareRequest.getresponse()
 shareXML = str(shareResponse.read())
