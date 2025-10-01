@@ -60,17 +60,15 @@ minutesFiles=$(echo "$minutesResponse" | grep -E -o '/remote.php/dav/[^<]+' | gr
 
 latestDate=$(getNewestFileDate "$minutesFiles") # Find the minutes with the latest date in the name
 newMinutesName="$(addAWeek "$latestDate")%20Minutes.docx" # Add a week to the date to make the new name
-echo "$newMinutesName"
 # Copy the minutes over
 curl -u "bot:$password" "${ncURL}remote.php/dav/files/bot$templatePath" -X COPY \
--H "Destination: ${ncURL}remote.php/dav/files/bot$minutesFolder/$newAgendaName" \
+-H "Destination: ${ncURL}remote.php/dav/files/bot$minutesFolder/$newMinutesName" \
 -H 'Overwrite: F'
 
 # Get the share link
 idResponse=$(curl -u "bot:$password" --header 'OCS-APIRequest: true' "${ncURL}ocs/v2.php/apps/files_sharing/api/v1/shares?path=$minutesFolder/$newMinutesName&shareType=3&permissions=1" \
  -X POST)
 shareLink=$(echo "$idResponse" | grep -E -o '<url>[^<]+' | cut -c 6-)
-echo "$shareLink"
 # Send a reminder in the #chapter-announcements channel.
 curl "$(jq -r '.minutesDiscordURL' /opt/bots/config.json)" -X POST -H "Content-Type: application/json" \
 --data "{\"content\": \"<@&626160984876384287> <@&626158522802896906> **The minutes for Monday's meeting has been generated! Please fill it out now:** $shareLink\"}"
