@@ -66,9 +66,26 @@ curl -u "bot:$password" "${ncURL}remote.php/dav/files/bot$templatePath" -X COPY 
 -H 'Overwrite: F'
 
 # Get the share link
-idResponse=$(curl -u "bot:$password" --header 'OCS-APIRequest: true' "${ncURL}ocs/v2.php/apps/files_sharing/api/v1/shares?path=$minutesFolder/$newMinutesName&shareType=3&permissions=1" \
+shareResponse=$(curl -u "bot:$password" --header 'OCS-APIRequest: true' "${ncURL}ocs/v2.php/apps/files_sharing/api/v1/shares?path=$minutesFolder/$newMinutesName&shareType=3&permissions=1" \
  -X POST)
-shareLink=$(echo "$idResponse" | grep -E -o '<url>[^<]+' | cut -c 6-)
+shareLink=$(echo "$shareResponse" | grep -E -o '<url>[^<]+' | cut -c 6-)
+
+# Get the edit link
+idResponse=$(curl -u "bot:$password" "${ncURL}remote.php/dav/files/bot$minutesFolder/$newMinutesName" \
+ -X PROPFIND --data \
+'<?xml version="1.0" encoding="UTF-8"?>
+   <d:propfind xmlns:d="DAV:">
+     <d:prop xmlns:oc="http://owncloud.org/ns">
+       <oc:fileid />
+     </d:prop>
+   </d:propfind>')
+id=$(echo "$idResponse" | grep -E -o '<oc:fileid>[^<]+' | cut -c 12-)
+editLink="${ncURL}f/$id"
+
+# Send a reminder in the #directors channel.
+curl "$(jq -r '.agendaDiscordURL' /opt/bots/config.json)" -X POST -H "Content-Type: application/json" \
+--data "{\"content\": \"<@&626160984876384287> <@&626158522802896906> **The minutes for Monday's meeting has been generated! Please fill it out now:** $editLink\"}"
+
 # Send a reminder in the #chapter-announcements channel.
 curl "$(jq -r '.minutesDiscordURL' /opt/bots/config.json)" -X POST -H "Content-Type: application/json" \
---data "{\"content\": \"<@&626160984876384287> <@&626158522802896906> **The minutes for Monday's meeting has been generated! Please fill it out now:** $shareLink\"}"
+--data "{\"content\": \"<@&626160984876384287> <@&626158522802896906> **Here are next week's minutes:** $shareLink\"}"
