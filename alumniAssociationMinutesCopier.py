@@ -68,7 +68,8 @@ newFilename = nextMonth.strftime("%Y %B Minutes.docx")
 minutesRequest.request(method="COPY",
                        url=ncUrl + quote("remote.php/dav/files/bot" + templatePath),
                        headers={"Authorization": "Basic " + base64.b64encode(b"bot:" + botPassword.encode()).decode(),
-                                "Destination": ncUrl + quote("remote.php/dav/files/bot" + minutesFolder + "/" + newFilename)})
+                                "Destination": ncUrl + quote("remote.php/dav/files/bot" + minutesFolder + "/" + newFilename),
+                                "Overwrite": "F"})
 minutesRequest.getresponse().close() # You have to close or read the response to re-use the request object
 
 # Get the file ID of the new minutes so we can get the share link
@@ -101,8 +102,8 @@ discordAnnouncementWebhookUrl = config["minutesAAAnnouncementDiscordURL"]
 print("<@&1130649672525021294> **Here are next month's meeting minutes:** " + internalShareURL)
 minutesRequest = http.client.HTTPSConnection("discord.com", 443)
 minutesRequest.request(method="POST", url=discordWebhookUrl, headers={"Content-Type": "application/json"},
-                       body="{\"content\": \"<@&1130649672525021294> **Here are next week's meeting minutes:** " + internalShareURL + "\"}")
+                       body="{\"content\": \"<@&1130649672525021294> **Here are next month's meeting minutes:** " + internalShareURL + "\"}")
 minutesRequest.request(method="POST", url=discordAnnouncementWebhookUrl, headers={"Content-Type": "application/json"},
-                      body="{\"content\": \"<@&1130649672525021294> **Here are next week's meeting minutes:** "+ shareURL +"\"}")
+                      body="{\"content\": \"<@&1130649672525021294> **Here are next month's meeting minutes:** "+ shareURL +"\"}")
 minutesResponse = minutesRequest.getresponse().close()
 
